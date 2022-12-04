@@ -1,6 +1,7 @@
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
 fn main() {
     println!("day1: {:?}", day1::get_elf_and_energy("src/inputs/day1", 3));
@@ -12,5 +13,15 @@ fn main() {
     println!(
         "day3 part2: {:?}",
         day3::calculate_priorities_part2("src/inputs/day3")
+    );
+
+    println!(
+        "day4 part1: {:?}",
+        day4::get_intersect_ranges("src/inputs/day4", day4::fully_overlaps)
+    );
+
+    println!(
+        "day4 part2: {:?}",
+        day4::get_intersect_ranges("src/inputs/day4", day4::partially_overlaps)
     );
 }
