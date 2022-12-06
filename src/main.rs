@@ -2,6 +2,7 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day6;
 
 fn main() {
     println!("day1: {:?}", day1::get_elf_and_energy("src/inputs/day1", 3));
@@ -24,4 +25,7 @@ fn main() {
         "day4 part2: {:?}",
         day4::get_intersect_ranges("src/inputs/day4", day4::partially_overlaps)
     );
+
+    println!("day6 part1: {:?}", day6::get_marker("src/inputs/day6", 4));
+    println!("day6 part2: {:?}", day6::get_marker("src/inputs/day6", 14));
 }
