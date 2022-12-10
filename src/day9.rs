@@ -16,44 +16,54 @@ impl Point {
 
 struct Rope {
     head: Point,
-    tail: Point,
+    tail: Vec<Point>,
     tail_path: Vec<Point>,
 }
 
 impl Rope {
-    fn new(start: Point) -> Rope {
+    fn new(start: Point, segments: usize) -> Rope {
         Rope {
             head: start,
-            tail: start,
+            tail: vec![start; segments],
             tail_path: vec![start],
         }
     }
 
-    fn adjust_tail(&mut self) {
-        let dx = self.head.x - self.tail.x;
-        let dy = self.head.y - self.tail.y;
-
-        println!("\n");
-        println!("dx: {}", dx);
-        println!("dy: {}", dy);
-        println!("head {} { }", self.head.x, self.head.y);
+    fn adjust_segment(&mut self, segment: usize) {
+        let current = self.tail[segment];
+        let prev = if segment == 0 {
+            self.head
+        } else {
+            self.tail[segment - 1]
+        };
+        let dx = prev.x - current.x;
+        let dy = prev.y - current.y;
 
         if dx.abs() > 1 || dy.abs() > 1 || dx.abs() + dy.abs() > 2 {
-            println!("adjusting tail");
             let x_step = dx.signum();
             let y_step = dy.signum();
 
-            self.tail.x += x_step;
-            self.tail.y += y_step;
+            self.tail[segment].x += x_step;
+            self.tail[segment].y += y_step;
+        }
 
-            println!("tail {} {}", self.tail.x, self.tail.y);
+        // println!("current: {:?}", current);
+        // println!("prev: {:?}", prev);
+        // println!("segments {:?}", self.tail);
+        // println!("");
+    }
+
+    fn adjust_tail(&mut self) {
+        for i in 0..self.tail.len() {
+            self.adjust_segment(i);
         }
     }
 
     fn log_tail(&mut self) {
         let last = self.tail_path.last().unwrap();
-        if (last.x != self.tail.x) || (last.y != self.tail.y) {
-            self.tail_path.push(self.tail);
+        let last_segment = self.tail.last().unwrap();
+        if (last.x != last_segment.x) || (last.y != last_segment.y) {
+            self.tail_path.push(last_segment.clone());
         };
     }
 
@@ -98,9 +108,9 @@ impl Rope {
     }
 }
 
-pub fn parse_input(path: &str) -> usize {
+pub fn parse_input(path: &str, segments: usize) -> usize {
     let file = File::open(path).expect("Unable to open file");
-    let mut rope = Rope::new(Point::new(0, 0));
+    let mut rope = Rope::new(Point::new(0, 0), segments);
 
     for l in io::BufReader::new(file).lines() {
         let line = l.unwrap();
@@ -124,34 +134,34 @@ pub fn parse_input(path: &str) -> usize {
 
     // println!("tail: {:?}", rope.tail_path);
     let positions = rope.tail_path.iter().collect::<HashSet<_>>();
-    for i in (0..=100).rev() {
-        for j in 0..=100 {
-            if positions.contains(&Point::new(j, i)) {
-                print!("#");
-            } else {
-                print!(".");
-            }
-        }
+    // for i in (0..=100).rev() {
+    //     for j in 0..=100 {
+    //         if positions.contains(&Point::new(j, i)) {
+    //             print!("#");
+    //         } else {
+    //             print!(".");
+    //         }
+    //     }
 
-        println!("");
-    }
+    //     println!("");
+    // }
     positions.len()
 }
 
 #[cfg(test)]
 #[test]
 fn test_move_up() {
-    let mut rope = Rope::new(Point::new(0, 0));
+    let mut rope = Rope::new(Point::new(0, 0), 1);
     rope.move_head((0, 0));
-    assert_eq!(rope.tail, Point::new(0, 0));
+    assert_eq!(rope.tail.last().unwrap(), &Point::new(0, 0));
     assert_eq!(rope.tail_path, vec![Point::new(0, 0)]);
 
     rope.move_head((0, 1));
-    assert_eq!(rope.tail, Point::new(0, 0));
+    assert_eq!(rope.tail.last().unwrap(), &Point::new(0, 0));
     assert_eq!(rope.tail_path, vec![Point::new(0, 0)]);
 
     rope.move_head((0, 4));
-    assert_eq!(rope.tail, Point::new(0, 4));
+    assert_eq!(rope.tail.last().unwrap(), &Point::new(0, 4));
     assert_eq!(
         rope.tail_path,
         vec![
@@ -166,9 +176,9 @@ fn test_move_up() {
 
 #[test]
 fn test_move_left() {
-    let mut rope = Rope::new(Point::new(1, 0));
+    let mut rope = Rope::new(Point::new(1, 0), 1);
     rope.move_head((4, 0));
-    assert_eq!(rope.tail, Point::new(4, 0));
+    assert_eq!(rope.tail.last().unwrap(), &Point::new(4, 0));
     assert_eq!(
         rope.tail_path,
         vec![
@@ -181,6 +191,11 @@ fn test_move_left() {
 }
 
 #[test]
-fn test_parse_input() {
-    assert_eq!(parse_input("src/specs/day9"), 13);
+fn test_parse_input_part1() {
+    assert_eq!(parse_input("src/specs/day9", 1), 13);
+}
+
+#[test]
+fn test_parse_input_part2() {
+    assert_eq!(parse_input("src/specs/day9_1", 9), 36);
 }

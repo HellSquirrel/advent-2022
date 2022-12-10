@@ -79,5 +79,6 @@ fn main() {
 
     println!("\n");
 
-    println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9"));
+    println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9", 1));
+    println!("day9 part2: {:?}", day9::parse_input("src/inputs/day9", 9));
 }
