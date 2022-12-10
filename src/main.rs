@@ -7,6 +7,7 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 
 fn main() {
     println!("day1: {:?}", day1::get_elf_and_energy("src/inputs/day1", 3));
@@ -74,5 +75,9 @@ fn main() {
             .map(|x| x.join(""))
             .map(|x| format!("{}{}", x, '\n'))
             .collect::<String>()
-    )
+    );
+
+    println!("\n");
+
+    println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9"));
 }
