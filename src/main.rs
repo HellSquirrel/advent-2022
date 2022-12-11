@@ -1,5 +1,7 @@
 mod day1;
 mod day10;
+mod day11;
+mod day11_2;
 mod day2;
 mod day3;
 mod day4;
@@ -81,4 +83,13 @@ fn main() {
 
     println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9", 1));
     println!("day9 part2: {:?}", day9::parse_input("src/inputs/day9", 9));
+    println!(
+        "day11 part1: {:?}",
+        day11::monkeys_to_string("src/inputs/day11", 20)
+    );
+
+    println!(
+        "day11 part2: {:?}",
+        day11_2::monkeys_to_string("src/inputs/day11", 10000)
+    );
 }
