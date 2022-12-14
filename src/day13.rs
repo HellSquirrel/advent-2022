@@ -105,23 +105,43 @@ impl RecList {
     }
 }
 
+impl std::fmt::Display for RecList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::List(l) => {
+                let mut s = String::from("[");
+                for i in l {
+                    s.push_str(&format!("{},", i));
+                }
+
+                while s.ends_with(",") {
+                    s.pop();
+                }
+                s.push(']');
+                write!(f, "{}", s)
+            }
+            Self::Value(v) => write!(f, "{}", v),
+        }
+    }
+}
+
 impl PartialOrd for RecList {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        println!("");
+        println!("comparing {} to {}", self, other);
+        let mut deep = String::from(" ");
         match (self, other) {
             (Self::Value(a), Self::Value(b)) => a.partial_cmp(b),
             (a, b) => {
-                println!("comparing {:?} to {:?}", a, b);
+                deep.push(' ');
                 let list_a = Self::to_list(a.clone());
                 let list_b = Self::to_list(b.clone());
+                let l1 = list_a.len();
+                let l2 = list_b.len();
 
                 let mut i = 0;
-                let mut result = None;
-                for i in 0..list_a.len() {
-                    if i >= list_b.len() {
-                        println!("a is longer");
-                        result = Some(Ordering::Greater);
-                        break;
-                    }
+                let mut results: Vec<Option<Ordering>> = vec![];
+                for i in 0..*([l1, l2]).iter().min().unwrap() as usize {
                     let a = list_a.get(i);
                     let b = list_b.get(i);
                     let la = list_a.len();
@@ -129,45 +149,69 @@ impl PartialOrd for RecList {
 
                     match a.partial_cmp(b) {
                         Some(Ordering::Less) => {
-                            result = Some(Ordering::Less);
-                            continue;
+                            results.push(Some(Ordering::Less));
+                            break;
                         }
                         Some(Ordering::Equal) => {
-                            if let None = result {
-                                result = Some(Ordering::Equal);
-                            }
+                            results.push(Some(Ordering::Equal));
                             continue;
                         }
                         Some(Ordering::Greater) => {
-                            result = Some(Ordering::Greater);
+                            results.push(Some(Ordering::Greater));
                             break;
                         }
-                        None => continue,
+                        None => {
+                            results.push(Some(Ordering::Equal));
+                            continue;
+                        }
                     }
                 }
 
-                if let Some(Ordering::Equal) = result {
-                    if list_a.len() < list_b.len() {
-                        println!("result: {:?}", "less");
-                        return Some(Ordering::Less);
-                    } else {
-                        println!("result: {:?}", "greater");
-                        return Some(Ordering::Greater);
-                    }
+                let is_gt = results.iter().any(|r| match r {
+                    Some(Ordering::Greater) => true,
+                    _ => false,
+                });
+
+                let is_lt = results.iter().any(|r| match r {
+                    Some(Ordering::Less) => true,
+                    _ => false,
+                });
+
+                if is_gt {
+                    return Some(Ordering::Greater);
                 }
 
-                println!("result: {:?}", result);
+                if is_lt {
+                    return Some(Ordering::Less);
+                }
 
-                result
+                if l1 > l2 {
+                    Some(Ordering::Greater)
+                } else if l1 < l2 {
+                    Some(Ordering::Less)
+                } else {
+                    Some(Ordering::Equal)
+                }
             }
         }
     }
 }
 
-pub fn parse_input(path: &str) -> usize {
+impl Ord for RecList {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.partial_cmp(other) {
+            Some(Ordering::Less) => Ordering::Less,
+            Some(Ordering::Equal) => Ordering::Equal,
+            Some(Ordering::Greater) => Ordering::Greater,
+            None => Ordering::Equal,
+        }
+    }
+}
+
+pub fn parse_input(path: &str) -> (usize, usize) {
     let file = File::open(path).expect("Unable to open file");
 
-    let contents: usize = io::BufReader::new(file)
+    let mut contents = io::BufReader::new(file)
         .lines()
         .filter_map(|s| match s {
             Ok(s) => {
@@ -179,21 +223,14 @@ pub fn parse_input(path: &str) -> usize {
             }
             Err(_) => None,
         })
-        .collect::<Vec<String>>()
+        .collect::<Vec<String>>();
+
+    let right_order: &usize = &mut contents
         .chunks(2)
         .enumerate()
         .map(|(i, chunk)| {
             let a = RecList::from_string(&chunk[0]);
             let b = RecList::from_string(&chunk[1]);
-
-            println!(
-                "index {},   {:?}   a: {:?}, b: {:?}",
-                i + 1,
-                a.partial_cmp(&b),
-                a,
-                b,
-            );
-            println!("");
 
             if let Some(Ordering::Less) = a.partial_cmp(&b) {
                 return i + 1;
@@ -203,7 +240,25 @@ pub fn parse_input(path: &str) -> usize {
         })
         .sum();
 
-    contents
+    let sorted = &mut contents
+        .iter()
+        .map(|s| RecList::from_string(s))
+        .collect::<Vec<RecList>>();
+
+    let marker1 = RecList::from_string("[[2]]");
+    let marker2 = RecList::from_string("[[6]]");
+
+    sorted.push(marker1.clone());
+    sorted.push(marker2.clone());
+
+    sorted.sort();
+
+    let i1 = sorted.iter().position(|s| s == &marker1).unwrap();
+    let i2 = sorted.iter().position(|s| s == &marker2).unwrap();
+
+    println!("{} {} {:?}", i1, i2, sorted);
+
+    (*right_order, (i1 + 1) * (i2 + 1))
 }
 
 #[cfg(test)]
@@ -314,7 +369,7 @@ mod tests {
         let l1 = RecList::from_vec(vec![1, 2, 0]);
         let l2 = RecList::from_vec(vec![4, 5]);
 
-        assert_eq!(l1.partial_cmp(&l2), Some(Ordering::Greater));
+        assert_eq!(l1.partial_cmp(&l2), Some(Ordering::Less));
     }
 
     #[test]
@@ -338,6 +393,12 @@ mod tests {
     #[test]
     fn test_parse_input() {
         let input = parse_input("src/specs/day13");
-        assert_eq!(input, 13);
+        assert_eq!(input.0, 13);
+    }
+
+    #[test]
+    fn test_parse_input_2() {
+        let input = parse_input("src/specs/day13");
+        assert_eq!(input.1, 140);
     }
 }

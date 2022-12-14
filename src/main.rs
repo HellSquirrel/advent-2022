@@ -95,9 +95,19 @@ fn main() {
         day11_2::monkeys_to_string("src/inputs/day11", 10000)
     );
 
-    println!("day12 part1: {:?}", day12::get_path("src/inputs/day12"));
+    // println!("day12 part1: {:?}", day12::get_path("src/inputs/day12"));
+    // println!(
+    //     "day12 part2: {:?}",
+    //     day12::get_path_part2("src/inputs/day12")
+    // );
+
     println!(
-        "day12 part2: {:?}",
-        day12::get_path_part2("src/inputs/day12")
+        "day13 part1: {:?}",
+        day13::parse_input("src/inputs/day13").0
+    );
+
+    println!(
+        "day13 part2: {:?}",
+        day13::parse_input("src/inputs/day13").1
     );
 }
