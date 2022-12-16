@@ -45,8 +45,6 @@ pub fn get_score(forest: &Vec<Vec<usize>>, (i, j): (usize, usize)) -> usize {
         row -= 1;
     }
 
-    println!("ts: {}", ts);
-
     row = i as i32 + 1;
 
     loop {
@@ -65,19 +63,12 @@ pub fn get_score(forest: &Vec<Vec<usize>>, (i, j): (usize, usize)) -> usize {
         row += 1;
     }
 
-    println!("bs: {}", bs);
-
     // left score
     let mut col = j as i32 - 1;
     loop {
         if col < 0 {
             break;
         }
-
-        println!(
-            "col: {}, i: {}, current: {}",
-            col, i, forest[i][col as usize]
-        );
 
         let current = forest[i][col as usize];
         if current < place_for_the_house {
@@ -89,8 +80,6 @@ pub fn get_score(forest: &Vec<Vec<usize>>, (i, j): (usize, usize)) -> usize {
 
         col -= 1;
     }
-
-    println!("ls: {}", ls);
 
     // right score
 
@@ -111,8 +100,6 @@ pub fn get_score(forest: &Vec<Vec<usize>>, (i, j): (usize, usize)) -> usize {
 
         col += 1;
     }
-
-    println!("rs: {}", rs);
 
     ts * bs * ls * rs
 }
@@ -184,7 +171,6 @@ pub fn get_scenic_score(path: &str) -> usize {
     for i in 1..parsed.len() - 1 {
         for j in 1..parsed[0].len() - 1 {
             let score = get_score(&parsed, (i, j));
-            println!("({}, {}) score: {}", i, j, score);
             if score > max {
                 max = score;
             }

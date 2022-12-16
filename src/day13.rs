@@ -127,8 +127,6 @@ impl std::fmt::Display for RecList {
 
 impl PartialOrd for RecList {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        println!("");
-        println!("comparing {} to {}", self, other);
         let mut deep = String::from(" ");
         match (self, other) {
             (Self::Value(a), Self::Value(b)) => a.partial_cmp(b),
@@ -256,8 +254,6 @@ pub fn parse_input(path: &str) -> (usize, usize) {
     let i1 = sorted.iter().position(|s| s == &marker1).unwrap();
     let i2 = sorted.iter().position(|s| s == &marker2).unwrap();
 
-    println!("{} {} {:?}", i1, i2, sorted);
-
     (*right_order, (i1 + 1) * (i2 + 1))
 }
 
@@ -375,7 +371,6 @@ mod tests {
     #[test]
     fn test_from_string() {
         let result = RecList::from_string("[1,1,3,1,1]");
-        println!("{:?}", result);
         assert_eq!(result, RecList::from_vec(vec![1, 1, 3, 1, 1]));
     }
 

@@ -5,6 +5,7 @@ mod day11_2;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 mod day2;
 mod day3;
 mod day4;
@@ -121,4 +122,6 @@ fn main() {
         "day14 part2: {:?}",
         day14::parse_input("src/inputs/day14").1 + 1
     );
+
+    println!("day15 part1: {:?}", day15::part1("src/inputs/day15"));
 }
