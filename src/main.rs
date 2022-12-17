@@ -124,13 +124,15 @@ fn main() {
         day14::parse_input("src/inputs/day14").1 + 1
     );
 
-    println!("day15 part1: {:?}", day15::part_1("src/inputs/day15"));
-    println!(
-        "day15 part2: {:?}",
-        day15::part_2(
-            "src/inputs/day15",
-            day15::Point::new(0, 0),
-            day15::Point::new(4000000, 4000000)
-        )
-    );
+    // println!("day15 part1: {:?}", day15::part_1("src/inputs/day15"));
+    // println!(
+    //     "day15 part2: {:?}",
+    //     day15::part_2(
+    //         "src/inputs/day15",
+    //         day15::Point::new(0, 0),
+    //         day15::Point::new(4000000, 4000000)
+    //     )
+    // );
+
+    println!("day 16 part1: {}", day16::part_1("src/inputs/day16"));
 }
