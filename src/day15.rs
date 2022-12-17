@@ -2,15 +2,16 @@ use regex::Regex;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::io::{stdout, Write};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-struct Point {
+pub struct Point {
     x: i32,
     y: i32,
 }
 
 impl Point {
-    fn new(x: i32, y: i32) -> Point {
+    pub fn new(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 
@@ -55,6 +56,23 @@ impl BeaconAndSensor {
 
         (Point::new(min_x, min_y), Point::new(max_x, max_y))
     }
+
+    fn row_range(&self, y: i32, x_min: i32, x_max: i32) -> Vec<(i32, i32)> {
+        let mut v = Vec::with_capacity(1);
+        let distance = self.max_distance() - (self.sensor.y - y).abs();
+        let x = self.sensor.x;
+
+        if distance < 0 {
+            return v;
+        } else {
+            let p1 = x - distance;
+            let p2 = x + distance;
+
+            v.push((p1.max(x_min), p2.min(x_max)));
+        }
+
+        v
+    }
 }
 
 fn get_unreachable_cells(beacons_and_sensors: &Vec<BeaconAndSensor>, y_pos: i32) -> HashSet<Point> {
@@ -95,15 +113,24 @@ fn get_unreachable_cells(beacons_and_sensors: &Vec<BeaconAndSensor>, y_pos: i32)
     unreachable_cells
 }
 
-fn find_distress_beacon(beacons_and_sensors: &Vec<BeaconAndSensor>) -> Option<Point> {
-    for current in beacons_and_sensors {
-        for other in beacons_and_sensors {
-            if current.beacon == other.beacon {
-                continue;
-            }
+fn find_distress_beacon(
+    beacons_and_sensors: &Vec<BeaconAndSensor>,
+    p_min: Point,
+    p_max: Point,
+) -> Option<Point> {
+    let x_min = p_min.x;
+    let x_max = p_max.x;
+    let y_min = p_min.y;
+    let y_max = p_max.y;
 
-            if current.should_be_empty(&other.beacon) {
-                return Some(current.beacon);
+    for y in y_min..=y_max {
+        // print!("\r y: {}", y);
+        // stdout().flush().unwrap();
+        let ranges = get_all_ranges(beacons_and_sensors, y, x_min, x_max);
+        if ranges.len() > 1 {
+            // println!("result: {:?}", ranges);
+            for e in ranges {
+                return Some(Point::new(e.1 + 1, y));
             }
         }
     }
@@ -135,12 +162,81 @@ fn parse_input(path: &str) -> Vec<BeaconAndSensor> {
         .collect::<Vec<_>>()
 }
 
-pub fn part1(path: &str) -> usize {
+pub fn part_1(path: &str) -> usize {
     let beacons_and_sensors = parse_input(path);
     get_unreachable_cells(&beacons_and_sensors, 2000000)
         .iter()
         .map(|p| p.x)
         .len()
+}
+
+fn merge_ranges(r1: (i32, i32), r2: (i32, i32)) -> Vec<(i32, i32)> {
+    let (x_s1, x_e1) = r1;
+    let (x_s2, x_e2) = r2;
+    let mut ranges = Vec::with_capacity(2);
+
+    let (first_range, second_range) = if x_s1 < x_s2 { (r1, r2) } else { (r2, r1) };
+
+    if first_range.1 < second_range.0 {
+        ranges.push(first_range);
+        ranges.push(second_range);
+    } else if first_range.1 <= second_range.1 {
+        ranges.push((first_range.0, second_range.1));
+    } else {
+        ranges.push(first_range);
+    }
+
+    ranges
+}
+
+fn get_all_ranges(
+    beacons_and_sensors: &Vec<BeaconAndSensor>,
+    y: i32,
+    x_min: i32,
+    x_max: i32,
+) -> HashSet<(i32, i32)> {
+    let mut ranges: HashSet<(i32, i32)> = HashSet::new();
+
+    for bas in beacons_and_sensors {
+        let r = bas.row_range(y, x_min, x_max);
+        if r.is_empty() {
+            continue;
+        }
+        if r[0] == (x_min, x_max) {
+            ranges.insert(r[0]);
+            return ranges;
+        }
+
+        ranges.insert(r[0]);
+    }
+
+    '_out: loop {
+        let clone = ranges.clone();
+        for r in &clone {
+            for k in &clone {
+                if r != k {
+                    let merged_ranges = merge_ranges(*r, *k);
+                    if merged_ranges.len() == 1 {
+                        ranges.remove(r);
+                        ranges.remove(k);
+                        ranges.insert(merged_ranges[0]);
+                        continue '_out;
+                    }
+                }
+            }
+        }
+
+        break;
+    }
+
+    ranges
+}
+
+pub fn part_2(path: &str, min: Point, max: Point) -> usize {
+    let beacons_and_sensors = parse_input(path);
+    let Point { x, y } = find_distress_beacon(&beacons_and_sensors, min, max).unwrap();
+
+    (4000000 * x + y) as usize
 }
 
 #[cfg(test)]
@@ -179,9 +275,22 @@ fn test_bounds() {
 }
 
 #[test]
-fn test_find_distress_beacon() {
-    let beacons_and_sensors = parse_input("src/specs/day15");
-    let result = find_distress_beacon(&beacons_and_sensors);
+fn test_row_range() {
+    let sensor = Point::new(8, 7);
+    let beacon = Point::new(2, 10);
 
-    assert_eq!(result, Some(Point::new(5, 8)));
+    let bas = BeaconAndSensor::new(beacon, sensor);
+
+    assert_eq!(bas.row_range(17, 0, 20), vec![]);
+    assert_eq!(bas.row_range(16, 0, 20), vec![(8, 8)]);
+    assert_eq!(bas.row_range(12, 0, 20), vec![(4, 12)]);
+    assert_eq!(bas.row_range(7, 0, 20), vec![(0, 17)]);
+    assert_eq!(bas.row_range(11, -4, 20), vec![(3, 13)]);
+}
+
+#[test]
+fn test_get_all_ranges() {
+    let beacons_and_sensors = parse_input("src/specs/day15");
+    let result2 = get_all_ranges(&beacons_and_sensors, 11, -4, 20);
+    assert_eq!(result2, HashSet::from_iter(vec![(-3, 13), (15, 20)]));
 }
