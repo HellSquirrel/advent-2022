@@ -199,6 +199,108 @@ impl Maze {
             .unwrap()
             .1 as usize
     }
+
+    pub fn get_best_score_for_both(&self) -> usize {
+        let steps = 26;
+        let keys: Vec<String> = self.data.keys().map(|k| k.clone()).collect();
+
+        let key_pairs_set: HashSet<(String, String)> = keys
+            .iter()
+            .flat_map(|k| self.data.keys().map(|k1| (k.clone(), k1.clone())))
+            .collect();
+
+        let key_pairs: Vec<(String, String)> = key_pairs_set.iter().map(|v| (*v).clone()).collect();
+
+        let mut initial_state = State::new(&keys);
+        initial_state = initial_state.open("AA".to_string());
+
+        let mut options: Vec<Vec<((String, String), i32, State)>> = Vec::with_capacity(steps);
+        let first = key_pairs
+            .iter()
+            .map(|(k1, k2)| {
+                (
+                    ((*k1).clone(), (*k2).clone()),
+                    if (k1, k2) == (&"AA".to_string(), &"AA".to_string()) {
+                        0
+                    } else {
+                        -100000
+                    },
+                    initial_state.clone(),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        options.push(first);
+
+        for i in 1..steps {
+            // println!("step {}", i);
+            let mut next_options = vec![];
+
+            let mut best_state = initial_state.clone();
+            let mut best_score = -100000;
+            for (name1, name2) in key_pairs.iter() {
+                // println!("checking name {}", name);
+                for (index, (other_name1, other_name2)) in key_pairs.iter().enumerate() {
+                    // human loop
+                    let distance1 = self.count_steps(name1, other_name1) as usize;
+
+                    if (i as i32) - (distance1 as i32) - 1 < 0 {
+                        continue;
+                    }
+
+                    let distance2 = self.count_steps(name2, other_name2) as usize;
+
+                    if (i as i32) - (distance2 as i32) - 1 < 0 {
+                        continue;
+                    }
+
+                    // println!("distance from {} to {} is {}", name, other_name, distance);
+
+                    let prev_cell = options[(i - distance1 - 1) as usize][index].clone();
+
+                    let (delta1, additional_steps1) = if prev_cell.2.is_opened(name1) {
+                        (0, 0)
+                    } else {
+                        (self.get_flow(name1), 1)
+                    };
+
+                    let (delta2, additional_steps2) = if prev_cell.2.is_opened(name2) {
+                        (0, 0)
+                    } else {
+                        (self.get_flow(name2), 1)
+                    };
+
+                    let score = prev_cell.1 + prev_cell.2.gas_for(distance1 as i32, self);
+
+                    let mut new_state = prev_cell.2.open(name1.clone());
+                    new_state = new_state.open(name2.clone());
+
+                    if score > best_score {
+                        best_score = score;
+                        best_state = new_state;
+                    }
+                }
+
+                // println!("picking {} for {}", best_name, name);
+
+                next_options.push((
+                    (name1.clone(), name2.clone()),
+                    best_score,
+                    best_state.clone(),
+                ));
+            }
+
+            options.push(next_options);
+        }
+
+        options
+            .last()
+            .unwrap()
+            .iter()
+            .max_by(|(_, s1, _), (_, s2, _)| s1.cmp(s2))
+            .unwrap()
+            .1 as usize
+    }
 }
 
 pub fn parse_input(path: &str) -> Maze {
@@ -263,4 +365,12 @@ mod tests {
 
         assert_eq!(score, 1651);
     }
+
+    // #[test]
+    // fn test_best_score_for_both() {
+    //     let res = parse_input("src/specs/day16");
+    //     let score = res.get_best_score_for_both();
+
+    //     assert_eq!(score, 1651);
+    // }
 }

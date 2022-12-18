@@ -7,6 +7,7 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day18;
 mod day2;
 mod day3;
 mod day4;
@@ -134,5 +135,7 @@ fn main() {
     //     )
     // );
 
-    println!("day 16 part1: {}", day16::part_1("src/inputs/day16"));
+    // println!("day 16 part1: {}", day16::part_1("src/inputs/day16"));
+
+    println!("day 18 part1: {}", day18::part_1("src/inputs/day18"));
 }
