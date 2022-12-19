@@ -69,28 +69,78 @@ impl Face {
     fn get_neighbors(&self) -> HashSet<Face> {
         let (x, y, z) = self.position;
         match self.direction {
-            Direction::X => HashSet::from([
-                Face::new(Direction::X, (x, y, z - 1)),
-                Face::new(Direction::X, (x, y, z + 1)),
-                Face::new(Direction::X, (x, y + 1, z)),
-                Face::new(Direction::X, (x, y - 1, z)),
-                Face::new(Direction::Y, (x, y, z)),
-                Face::new(Direction::Y, (x, y - 1, z)),
-                Face::new(Direction::Z, (x, y, z)),
-                Face::new(Direction::Z, (x, y, z - 1)),
-            ]),
+            Direction::Z => {
+                let mut adjacet_faces = HashSet::from([
+                    Face::new(Direction::Z, (x, y + 1, z)),
+                    Face::new(Direction::Z, (x, y - 1, z)),
+                    Face::new(Direction::Z, (x + 1, y, z)),
+                    Face::new(Direction::Z, (x - 1, y, z)),
+                ]);
 
-            Direction::Y => HashSet::from([
-                Face::new(Direction::Y, (x, y, z - 1)),
-                Face::new(Direction::Y, (x, y, z + 1)),
-                Face::new(Direction::Y, (x + 1, y, z)),
-                Face::new(Direction::Y, (x - 1, y, z)),
-                Face::new(Direction::X, (x, y, z)),
-                Face::new(Direction::X, (x - 1, y, z)),
-                Face::new(Direction::Z, (x, y, z)),
-                Face::new(Direction::Z, (x, y, z - 1)),
-            ]),
+                let Cube = Cube::new((x, y, z));
+                let mut cube_faces = Cube.get_faces();
+                cube_faces.remove(self);
+                cube_faces.remove(&Face::new(Direction::Z, (x, y, z - 1)));
 
+                adjacet_faces.extend(cube_faces);
+
+                let mut cube_faces_2 = Cube::new((x, y, z + 1)).get_faces();
+                cube_faces_2.remove(&Face::new(Direction::Z, (x, y, z + 1)));
+                cube_faces_2.remove(self);
+
+                adjacet_faces.extend(cube_faces_2);
+
+                adjacet_faces
+            }
+
+            Direction::Y => {
+                let mut adjacet_faces = HashSet::from([
+                    Face::new(Direction::Y, (x, y, z + 1)),
+                    Face::new(Direction::Y, (x, y, z - 1)),
+                    Face::new(Direction::Y, (x + 1, y, z)),
+                    Face::new(Direction::Y, (x - 1, y, z)),
+                ]);
+
+                let Cube = Cube::new((x, y, z));
+                let mut cube_faces = Cube.get_faces();
+                cube_faces.remove(self);
+                cube_faces.remove(&Face::new(Direction::Y, (x, y - 1, z)));
+
+                adjacet_faces.extend(cube_faces);
+
+                let mut cube_faces_2 = Cube::new((x, y + 1, z)).get_faces();
+                cube_faces_2.remove(&Face::new(Direction::Y, (x, y + 1, z)));
+                cube_faces_2.remove(self);
+
+                adjacet_faces.extend(cube_faces_2);
+
+                adjacet_faces
+            }
+
+            Direction::X => {
+                let mut adjacet_faces = HashSet::from([
+                    Face::new(Direction::X, (x, y, z + 1)),
+                    Face::new(Direction::X, (x, y, z - 1)),
+                    Face::new(Direction::X, (x, y + 1, z)),
+                    Face::new(Direction::X, (x, y - 1, z)),
+                ]);
+
+                let Cube = Cube::new((x, y, z));
+                let mut cube_faces = Cube.get_faces();
+                cube_faces.remove(self);
+                cube_faces.remove(&Face::new(Direction::X, (x - 1, y, z)));
+
+                adjacet_faces.extend(cube_faces);
+
+                let mut cube_faces_2 = Cube::new((x + 1, y, z)).get_faces();
+                cube_faces_2.remove(&Face::new(Direction::X, (x + 1, y, z)));
+                cube_faces_2.remove(self);
+
+                adjacet_faces.extend(cube_faces_2);
+
+                adjacet_faces
+            }
+        }
     }
 }
 
@@ -114,7 +164,7 @@ impl Cube {
 
         faces.insert(Face {
             direction: Direction::X,
-            position: (x + 1, y, z),
+            position: (x - 1, y, z),
         });
 
         faces.insert(Face {
@@ -124,7 +174,7 @@ impl Cube {
 
         faces.insert(Face {
             direction: Direction::Y,
-            position: (x, y + 1, z),
+            position: (x, y - 1, z),
         });
 
         faces.insert(Face {
@@ -134,7 +184,7 @@ impl Cube {
 
         faces.insert(Face {
             direction: Direction::Z,
-            position: (x, y, z + 1),
+            position: (x, y, z - 1),
         });
 
         faces
@@ -212,6 +262,39 @@ impl Cluster {
 
         count
     }
+
+    fn get_outer_edges(&self) -> HashSet<Face> {
+        let mut outer = HashSet::new();
+        let mut to_visit: Vec<Face> = Vec::new();
+
+        let mut current_faces = self.faces.clone();
+        let min_x_face = current_faces
+            .iter()
+            .filter(|x| x.direction == Direction::X)
+            .min_by(|x, y| x.position.0.cmp(&y.position.0))
+            .unwrap()
+            .clone();
+
+        current_faces.remove(&min_x_face);
+
+        to_visit.push(min_x_face);
+
+        while !to_visit.is_empty() {
+            let current = to_visit.pop().unwrap();
+
+            let neighbors = current.get_neighbors();
+            for a in neighbors {
+                // println!("Neighbor: {:?}", a);
+                if current_faces.contains(&a) && !outer.contains(&a) {
+                    current_faces.remove(&a);
+                    outer.insert(a.clone());
+                    to_visit.push(a);
+                }
+            }
+        }
+
+        outer
+    }
 }
 
 impl Display for Cluster {
@@ -239,7 +322,6 @@ pub fn part_2(path: &str) -> usize {
         for c in clusters.iter() {
             for d in clusters.iter() {
                 if c != d && c.can_merge(d) {
-                    println!(" --> MERGE {} {}", c, d);
                     let mut new_cluster = c.clone();
                     new_cluster.merge(d.clone());
                     initial_clusters.retain(|x| x != d && x != c);
@@ -252,13 +334,13 @@ pub fn part_2(path: &str) -> usize {
         break;
     }
 
-    // for c in &initial_clusters {
-    //     println!("{}", c);
-    // }
+    for c in &initial_clusters {
+        let outer_edges = c.get_outer_edges();
+    }
 
     initial_clusters
         .iter()
-        .map(|x| x.total_faces())
+        .map(|x| x.get_outer_edges().iter().count())
         .sum::<usize>()
 }
 
@@ -275,7 +357,7 @@ mod tests {
     #[test]
     fn test_part_2() {
         let input = part_2("src/specs/day18");
-        assert_eq!(input, 64);
+        assert_eq!(input, 58);
     }
 
     #[test]

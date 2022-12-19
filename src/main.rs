@@ -138,4 +138,5 @@ fn main() {
     // println!("day 16 part1: {}", day16::part_1("src/inputs/day16"));
 
     println!("day 18 part1: {}", day18::part_1("src/inputs/day18"));
+    println!("day 18 part2: {}", day18::part_2("src/inputs/day18"));
 }
