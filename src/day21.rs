@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::io::{stdout, Write};
 
 #[derive(Debug, Clone, PartialEq)]
-enum Expression {
-    Value(f32),
+pub(crate) enum Expression {
+    Value(f64),
     Variable(String),
     Add(Box<Expression>, Box<Expression>),
     Sub(Box<Expression>, Box<Expression>),
@@ -15,7 +16,7 @@ enum Expression {
 
 use Expression::*;
 
-pub(crate) fn parse_input(path: &str) -> HashMap<String, Expression> {
+pub(crate) fn parse_input(path: &str) -> Expression {
     let file = File::open(path).unwrap();
     let mut i = 0;
     let mut result = io::BufReader::new(file)
@@ -45,7 +46,7 @@ pub(crate) fn parse_input(path: &str) -> HashMap<String, Expression> {
             } else {
                 let x = value_regex.captures(&line).unwrap();
                 let name = x[1].to_string();
-                let value = x[2].parse::<f32>().unwrap();
+                let value = x[2].parse::<f64>().unwrap();
 
                 return (name.clone(), Value(value));
             }
@@ -75,21 +76,54 @@ pub(crate) fn parse_input(path: &str) -> HashMap<String, Expression> {
         _ => panic!("root op is not compare"),
     };
 
-    println!("{:#?}, {:#?}", left, right);
+    // println!("{:#?}, {:#?}", left, right);
 
-    let mut hm = HashMap::new();
-    hm.insert("humn".to_string(), Value(10.0));
+    let left_unboxed = *left.clone();
+    let right_unboxed = *right.clone();
+    let mut hm: HashMap<String, Expression> = HashMap::new();
+    let mut i: f64 = 3441100000000.0;
 
-    let unboxed = *left;
+    let mut di = 100 as f64;
 
-    let unboxed = substitute_variable(unboxed, &hm, &vec![]);
-    unboxed.reduce();
+    loop {
+        hm.insert("humn".to_string(), Value(i));
+        let mut test = substitute_variable(left_unboxed.clone(), &hm, &vec![]);
+        test = test.reduce();
 
-    // println!("{:#?}", result);
+        if test.clone() == right_unboxed.clone() {
+            println!("found: {:?}, for {:?}", i, test);
+            return Value(i);
+        }
 
-    println!("unboxed: {:#?}", unboxed);
-    // println!("{:#?}", result);
-    result
+        if di == 100.0 {
+            match (test, right_unboxed.clone()) {
+                (Value(k), Value(j)) => {
+                    if k == j {
+                        println!("found: {:?}, for {:?} {:?}", i, k, j);
+                        return Value(i);
+                    }
+                    if k <= j {
+                        println!("greater, tried: {:?}, for {:?} {:?}", i, k, j);
+                        di = -1.0;
+                    } else {
+                        println!("less, tried: {:?}, for {:?} {:?}", i, k, j);
+                        i += di as f64;
+                        continue;
+                    }
+                }
+
+                _ => {
+                    i += di as f64;
+                    continue;
+                }
+            };
+        } else {
+            println!("di is: {:?}", di);
+            println!("tried: {:?} {:?} {:?}", i, test, right_unboxed.clone());
+            i += di as f64;
+        }
+
+    }
 }
 
 fn replace_variables(hash: &mut HashMap<String, Expression>) {
@@ -107,7 +141,11 @@ fn reduce(hash: &mut HashMap<String, Expression>) {
     }
 }
 
-fn substitute_variable(e: Expression, hash: &HashMap<String, Expression>, ignore_keys: &Vec<String>) -> Expression {
+fn substitute_variable(
+    e: Expression,
+    hash: &HashMap<String, Expression>,
+    ignore_keys: &Vec<String>,
+) -> Expression {
     match e {
         Variable(v) => {
             if ignore_keys.contains(&v) {
@@ -274,8 +312,23 @@ mod tests {
     }
 
     #[test]
+    fn test_reduce() {
+        let a = Div(
+            Box::new(Add(
+                Box::new(Value(4.0)),
+                Box::new(Mul(
+                    Box::new(Value(2.0)),
+                    Box::new(Sub(Box::new(Value(10.0)), Box::new(Value(3.0)))),
+                )),
+            )),
+            Box::new(Value(4.0)),
+        );
+        assert_eq!(a.reduce(), Value(4.5));
+    }
+
+    #[test]
     fn test_parse_input() {
-        let input = parse_input("src/specs/day21");
-        assert_eq!(2, 4);
+        let inp = parse_input("src/specs/day21");
+        assert_eq!(inp, Value(301.0))
     }
 }
