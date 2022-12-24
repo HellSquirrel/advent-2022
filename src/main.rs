@@ -19,6 +19,7 @@ mod day8;
 mod day9;
 mod day19;
 mod day20;
+mod day21;
 
 fn main() {
     println!("day1: {:?}", day1::get_elf_and_energy("src/inputs/day1", 3));
@@ -149,5 +150,5 @@ fn main() {
 
     println!("day 20 part1: {}", day20::part_1("src/inputs/day20"));
     println!("day 20 part2: {}", day20::part_2("src/inputs/day20"));
-
+    println!("day 21 part1: {}", day21::part_1("src/inputs/day21"));
 }
