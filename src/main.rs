@@ -7,6 +7,7 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 mod day18;
 mod day2;
 mod day3;
@@ -16,6 +17,8 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
+mod day19;
+mod day20;
 
 fn main() {
     println!("day1: {:?}", day1::get_elf_and_energy("src/inputs/day1", 3));
@@ -66,38 +69,38 @@ fn main() {
         day8::get_scenic_score("src/inputs/day8")
     );
 
-    println!(
-        "day10 part1: {:?}",
-        day10::parse_input("src/inputs/day10").0
-    );
-    println!("day10 part2:");
+    // println!(
+    //     "day10 part1: {:?}",
+    //     day10::parse_input("src/inputs/day10").0
+    // );
+    // println!("day10 part2:");
 
-    let parsed = day10::parse_input("src/inputs/day10").1;
-    let mut result = parsed.split("").collect::<Vec<&str>>();
-    result.pop();
+    // let parsed = day10::parse_input("src/inputs/day10").1;
+    // let mut result = parsed.split("").collect::<Vec<&str>>();
+    // result.pop();
 
-    print!(
-        "{}",
-        result
-            .chunks(40)
-            .map(|x| x.join(""))
-            .map(|x| format!("{}{}", x, '\n'))
-            .collect::<String>()
-    );
+    // print!(
+    //     "{}",
+    //     result
+    //         .chunks(40)
+    //         .map(|x| x.join(""))
+    //         .map(|x| format!("{}{}", x, '\n'))
+    //         .collect::<String>()
+    // );
 
-    println!("\n");
+    // println!("\n");
 
-    println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9", 1));
-    println!("day9 part2: {:?}", day9::parse_input("src/inputs/day9", 9));
-    println!(
-        "day11 part1: {:?}",
-        day11::monkeys_to_string("src/inputs/day11", 20)
-    );
+    // println!("day9 part1: {:?}", day9::parse_input("src/inputs/day9", 1));
+    // println!("day9 part2: {:?}", day9::parse_input("src/inputs/day9", 9));
+    // println!(
+    //     "day11 part1: {:?}",
+    //     day11::monkeys_to_string("src/inputs/day11", 20)
+    // );
 
-    println!(
-        "day11 part2: {:?}",
-        day11_2::monkeys_to_string("src/inputs/day11", 10000)
-    );
+    // println!(
+    //     "day11 part2: {:?}",
+    //     day11_2::monkeys_to_string("src/inputs/day11", 10000)
+    // );
 
     // println!("day12 part1: {:?}", day12::get_path("src/inputs/day12"));
     // println!(
@@ -105,25 +108,25 @@ fn main() {
     //     day12::get_path_part2("src/inputs/day12")
     // );
 
-    println!(
-        "day13 part1: {:?}",
-        day13::parse_input("src/inputs/day13").0
-    );
+    // println!(
+    //     "day13 part1: {:?}",
+    //     day13::parse_input("src/inputs/day13").0
+    // );
 
-    println!(
-        "day13 part2: {:?}",
-        day13::parse_input("src/inputs/day13").1
-    );
+    // println!(
+    //     "day13 part2: {:?}",
+    //     day13::parse_input("src/inputs/day13").1
+    // );
 
-    println!(
-        "day14 part1: {:?}",
-        day14::parse_input("src/inputs/day14").0
-    );
+    // println!(
+    //     "day14 part1: {:?}",
+    //     day14::parse_input("src/inputs/day14").0
+    // );
 
-    println!(
-        "day14 part2: {:?}",
-        day14::parse_input("src/inputs/day14").1 + 1
-    );
+    // println!(
+    //     "day14 part2: {:?}",
+    //     day14::parse_input("src/inputs/day14").1 + 1
+    // );
 
     // println!("day15 part1: {:?}", day15::part_1("src/inputs/day15"));
     // println!(
@@ -137,6 +140,14 @@ fn main() {
 
     // println!("day 16 part1: {}", day16::part_1("src/inputs/day16"));
 
-    println!("day 18 part1: {}", day18::part_1("src/inputs/day18"));
-    println!("day 18 part2: {}", day18::part_2("src/inputs/day18"));
+    // println!("day 17 part1: {}", day17::part_1("src/inputs/day17"));
+    // println!("day 17 part2: {}", day17::part_2("src/inputs/day17"));
+
+    // println!("day 18 part1: {}", day18::part_1("src/inputs/day18"));
+    // println!("day 18 part2: {}", day18::part_2("src/inputs/day18"));
+    // println!("day 18 part2: {}", day18::part_2("src/inputs/day18"));
+
+    println!("day 20 part1: {}", day20::part_1("src/inputs/day20"));
+    println!("day 20 part2: {}", day20::part_2("src/inputs/day20"));
+
 }
